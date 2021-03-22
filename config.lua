@@ -1,5 +1,5 @@
 Config                            = {}
-Config.DrawDistance               = 10.0
+Config.DrawDistance               = 5.0
 Config.DistanceMethod             = 'LuaMethod'  -- Vdist / LuaMethod
 Config.Locale                     = 'tr'
 
