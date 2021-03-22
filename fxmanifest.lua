@@ -3,18 +3,18 @@ game 'gta5'
 
 author 'BerkSMBL'
 description 'ESX Duty'
-version '1.0.0'
+version '1.0.1'
 
 client_scripts {
     '@es_extended/locale.lua',
-    'locales/tr.lua',
+    'locales/*.lua',
     'config.lua',
     'client/main.lua',
 }
 
 server_scripts {
     '@es_extended/locale.lua',
-    'locales/tr.lua',
+    'locales/*.lua',
     'config.lua',
     'server/main.lua',
 }

@@ -1,6 +1,6 @@
 Locales['tr'] = {
-  	['duty'] = '~INPUT_CONTEXT~ Tuşunu kullanarak mesaiye ~g~giriş~s~/~r~çıkış~s~ yapabilirsiniz.',
-	['onduty'] = 'Şuan Mesaidesin!',
-	['offduty'] = 'Şuan Mesaide değilsin!',
-} 
-   
+	['onduty'] = 'Mesaidesin!',
+	['offduty'] = 'Mesai dışındasın!',
+	['duty1'] = '~INPUT_CONTEXT~ tuşu ile mesaiden ~g~çıkabilirsin.~s~',
+	['duty2'] = '~INPUT_CONTEXT~ tuşu ile mesaiye ~r~girebilirsin.~s~',
+}

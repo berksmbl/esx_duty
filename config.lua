@@ -1,29 +1,31 @@
 Config                            = {}
-Config.DrawDistance               = 50.0
-Config.Locale = 'tr'
+Config.DrawDistance               = 10.0
+Config.DistanceMethod             = 'LuaMethod'  -- Vdist / LuaMethod
+Config.Locale                     = 'tr'
+
+Config.JustCanSeeOne              = true -- If you make this false you can have any zones so near to each other but it will get higher usage
+
+Config.HelpText                   = 'Floating'  -- 3DText / Floating / Normal
 
 Config.Zones = {
-  Police = {
-    Pos   = { x = 443.45, y = -981.95, z = 29.691 },
-    Size  = { x = 2.5, y = 2.5, z = 1.5 },
-    Color = { r = 0, g = 255, b = 0 },  
-    Type  = 27,
-    JobRequired = "police"
+  Police  = {
+    job = 'police',
+    offjob = 'offpolice',
+    Pos   = { x = 440.8, y = -981.92, z = 30.63 },
+    Size  = { x = 1.5, y = 1.5, z = 1.5 },
   },
-  
-  Ambulance = {
-    Pos = { x = 310.72, y = -595.93, z = 42.29 },
-    Size = { x = 2.5, y = 2.5, z = 1.5 },
-    Color = { r = 0, g = 255, b = 0 },
-    Type = 27,
-    JobRequired = "ambulance"
-  },  
+
+  Ambulance  = {
+    job = 'ambulance',
+    offjob = 'offambulance',
+    Pos = { x = 308.25, y = -592.1, z = 43.23 },
+    Size = { x = 1.5, y = 1.5, z = 1.5 },
+  },
   
   Sheriff = {
-    Pos = { x = -450.1, y = 6012.78, z = 30.8 },
+    job = 'sheriff',
+    offjob = 'offsheriff',
+    Pos = { x = -450.1, y = 6012.78, z = 31.67 },
     Size = { x = 1.5, y = 1.5, z = 1.5 },
-    Color = { r = 0, g = 255, b = 0 },
-    Type = 27,
-    JobRequired = "sheriff"
-  },
+  }
 }

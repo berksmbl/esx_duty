@@ -1,130 +1,127 @@
---- action functions
-local CurrentAction           = nil
-local CurrentActionMsg        = ''
-local CurrentActionData       = {}
-local HasAlreadyEnteredMarker = false
-local LastZone                = nil
 ESX                           = nil
+local PlayerData              = {}
+local dutyjobsinfo            = {}
+local offdutyjobsinfo         = {}
+local OnDutyJobsList          = {}
+local OffDutyJobsList         = {}
+
 Citizen.CreateThread(function()
-	while ESX == nil do
-		TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end)
-		Citizen.Wait(100)
-	end
+    while ESX == nil do
+        TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end)
+        Citizen.Wait(0)
+    end
 
-	while ESX.GetPlayerData().job == nil do
-		Citizen.Wait(100)
-	end
+    while ESX.GetPlayerData().job == nil do
+        Citizen.Wait(10)
+    end
 
-  ESX.PlayerData = ESX.GetPlayerData()
+    PlayerData = ESX.GetPlayerData()
 end)
 
 RegisterNetEvent('esx:playerLoaded')
 AddEventHandler('esx:playerLoaded', function(xPlayer)
-  ESX.PlayerData = xPlayer
+    PlayerData = xPlayer
 end)
 
 RegisterNetEvent('esx:setJob')
 AddEventHandler('esx:setJob', function(job)
-	ESX.PlayerData.job = job
+    PlayerData.job = job
 end)
 
-----markers
-AddEventHandler('esx_duty:hasEnteredMarker', function (zone)
-  CurrentActionData, CurrentActionMsg = {}, ''
-	CurrentAction     = nil
-end)
+ShowHelpNotification = function(msg)
+    SetTextComponentFormat("DUTYSTRING")
+    AddTextComponentString(msg)
+    DisplayHelpTextFromStringLabel(0, 0, 1, -1)
+	EndTextCommandDisplayHelp(0, 0, 1, -1)
+end
 
-AddEventHandler('esx_duty:hasExitedMarker', function (zone)
-  CurrentActionData, CurrentActionMsg = {}, ''
-  CurrentAction     = nil
-end)
+ShowFloatingHelpNotification = function(msg, coords)
+	AddTextEntry('DUTYSTRING', msg)
+	SetFloatingHelpTextWorldPosition(1, coords)
+	SetFloatingHelpTextStyle(1, 1, 2, -1, 3, 0)
+	BeginTextCommandDisplayHelp('DUTYSTRING')
+	EndTextCommandDisplayHelp(2, false, false, -1)
+end
 
--- enter exit marker job events
-Citizen.CreateThread(function ()
-  while true do
-    Wait(0)
+DrawText3D = function(coords, text, size, font)
+	coords = vector3(coords.x, coords.y, coords.z)
 
-    local coords      = GetEntityCoords(GetPlayerPed(-1))
-    local isInMarker  = false
-    local currentZone = nil
-    local sleep = true
+	local camCoords = GetGameplayCamCoords()
+	local distance = #(coords - camCoords)
 
-    for k,v in pairs(Config.Zones) do
-      if(GetDistanceBetweenCoords(coords, v.Pos.x, v.Pos.y, v.Pos.z, true) < 1.5) then
-        local jobName = ESX.PlayerData.job.name
+	if not size then size = 1 end
+	if not font then font = 0 end
 
-        if string.match(jobName, "off") then jobName = jobName:gsub("%off", "") end
+	local scale = (size / distance) * 2
+	local fov = (1 / GetGameplayCamFov()) * 100
+	scale = scale * fov
 
-        if v.JobRequired == jobName then
-          sleep = false
-          isInMarker  = true
-          currentZone = k
+	SetTextScale(0.0 * scale, 0.55 * scale)
+	SetTextFont(font)
+	SetTextColour(255, 255, 255, 255)
+	SetTextDropshadow(0, 0, 0, 0, 255)
+	SetTextDropShadow()
+	SetTextOutline()
+	SetTextCentre(true)
 
-          CurrentAction     = 'esx_duty_changejob'
-          CurrentActionMsg  = _U('duty')
-          CurrentActionData = {}
+	SetDrawOrigin(coords, 0)
+	BeginTextCommandDisplayText('DUTYSTRING')
+	AddTextComponentSubstringPlayerName(text)
+	EndTextCommandDisplayText(0.0, 0.0)
+	ClearDrawOrigin()
+end
+
+Citizen.CreateThread(function()
+	for k,v in pairs(Config.Zones) do
+		if not dutyjobsinfo[v.job] then OnDutyJobsList[#OnDutyJobsList+1] = v.job end
+		if not offdutyjobsinfo[v.offjob] then OffDutyJobsList[#OffDutyJobsList+1] = v.offjob end
+		dutyjobsinfo[v.job] = v.offjob
+		offdutyjobsinfo[v.offjob] = v.job
+	end
+    while true do
+        local Sleep = 1000
+        if ESX and PlayerData.job then
+			local playerjob = PlayerData.job.name
+			if dutyjobsinfo[playerjob] or offdutyjobsinfo[playerjob] then
+				for k,v in pairs(Config.Zones) do
+					if playerjob == v.job or playerjob == v.offjob then
+						local coords = GetEntityCoords(GetPlayerPed(-1))
+						local dist = 999.0
+						if Config.DistanceMethod == 'Vdist' then
+							dist = Vdist(coords, v.Pos.x, v.Pos.y, v.Pos.z)
+						else
+							dist = #(coords - vector3(v.Pos.x, v.Pos.y, v.Pos.z))
+						end
+						if(dist <= Config.DrawDistance)then
+							Sleep = 5
+							local r,g,b = 0,255,0
+							local duty = _U('duty1')
+							if playerjob == v.offjob then duty = _U('duty2') r,g,b = 255,0,0 end
+							DrawMarker(6, v.Pos.x, v.Pos.y, v.Pos.z - 0.975, 0.0, 0.0, 0.0, -90.0, 0.0, 0.0, v.Size.x, v.Size.y, v.Size.z, r,g,b, 100, false, true, 2, false, false, false, false)
+							if(dist <= v.Size.x)then
+								if Config.HelpText == '3DText' then
+									DrawText3D(vector3(v.Pos.x, v.Pos.y, v.Pos.z),duty,0.75)
+								elseif Config.HelpText == 'Floating' then
+									ShowFloatingHelpNotification(duty,vector3(v.Pos.x, v.Pos.y, v.Pos.z))
+								else
+									ShowHelpNotification(duty)
+								end
+								if IsControlJustPressed(0, 38) then
+									TriggerServerEvent('esx_duty:changeDutyStatus')
+								end
+							end
+							if Config.JustCanSeeOne then
+								break
+							end
+						end
+					end
+				end
+			else
+				Sleep = 2000
+			end
+        else
+            Sleep = 3000
         end
-      end
+        Wait(Sleep)
     end
-
-    if (isInMarker and not HasAlreadyEnteredMarker) or (isInMarker and LastZone ~= currentZone) then
-      HasAlreadyEnteredMarker = true
-      LastZone                = currentZone
-      TriggerEvent('esx_duty:hasEnteredMarker', currentZone)
-    end
-
-    if not isInMarker and HasAlreadyEnteredMarker then
-      HasAlreadyEnteredMarker = false
-      TriggerEvent('esx_duty:hasExitedMarker', LastZone)
-    end
-
-    if sleep then
-      Citizen.Wait(1000)
-    end
-  end
-end)
-
---keycontrols
-Citizen.CreateThread(function ()
-  while true do
-    Citizen.Wait(5)
-    
-    if CurrentAction ~= nil then
-      ESX.ShowHelpNotification(CurrentActionMsg, true)
-
-      if IsControlJustReleased(0, 38) then
-        TriggerServerEvent('esx_duty:changeDutyStatus')
-      end
-
-      CurrentActionData, CurrentActionMsg = {}, ''
-      CurrentAction     = nil
-    end
-  end
-end)
-
--- display markers
-Citizen.CreateThread(function ()
-  while true do
-    Wait(0)
-
-    local coords = GetEntityCoords(GetPlayerPed(-1))
-    local sleep = true
-
-    for k,v in pairs(Config.Zones) do
-      if(GetDistanceBetweenCoords(coords, v.Pos.x, v.Pos.y, v.Pos.z, true) < Config.DrawDistance) then
-
-        local jobName = ESX.PlayerData.job.name
-        if string.match(jobName, "off") then jobName = jobName:gsub("%off", "") end
-
-        if v.JobRequired == jobName then
-          sleep = false
-          DrawMarker(v.Type, v.Pos.x, v.Pos.y, v.Pos.z, 0.0, 0.0, 0.0, 0, 0.0, 0.0, v.Size.x, v.Size.y, v.Size.z, v.Color.r, v.Color.g, v.Color.b, 100, false, true, 2, false, false, false, false)
-        end
-      end
-    end
-
-    if sleep then
-      Citizen.Wait(1000)
-    end
-  end
 end)
