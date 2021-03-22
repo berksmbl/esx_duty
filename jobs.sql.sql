@@ -1,6 +1,6 @@
 INSERT INTO `jobs` (name, label) VALUES
   ('offpolice','Mesai dışı LSPD'),
-  ('offambulance','Mesai dışı LSMD')
+  ('offambulance','Mesai dışı LSMD'),
   ('offsheriff','Mesai dışı LSSD')
 ;
 
